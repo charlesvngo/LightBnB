@@ -23,7 +23,7 @@ CREATE TABLE properties (
   number_of_bathrooms INTEGER NOT NULL DEFAULT 0,
   number_of_bedrooms INTEGER NOT NULL DEFAULT 0,
 
-  county VARCHAR(255) NOT NULL,
+  country VARCHAR(255) NOT NULL,
   street VARCHAR(255) NOT NULL,
   city VARCHAR(255) NOT NULL,
   province VARCHAR(255) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE reservations (
 );
 
 CREATE TABLE property_reviews (
-  id INTEGER NOT NULL,
+  id SERIAL PRIMARY KEY NOT NULL,
   guest_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
   reservation_id INTEGER REFERENCES reservations(id) ON DELETE CASCADE,
