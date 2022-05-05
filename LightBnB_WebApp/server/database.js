@@ -19,9 +19,9 @@ const pool = new Pool({
 const getUserWithEmail = function(email) {
   return pool
     .query(`SELECT * FROM users WHERE email = $1 `, [`${email}`])
-    .then((result) => {
+    .then((email) => {
       // Returns an array with a single object inside.
-      return result.rows[0];
+      return email.rows[0];
     })
     .catch((err) => {
       console.log(err);
@@ -36,7 +36,15 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
+  return pool
+    .query(`SELECT * FROM users WHERE id = $1 `, [`${id}`])
+    .then((id) => {
+      return id.rows[0];
+    })
+    .catch((err) => {
+      console.log(err);
+      return null;
+    });
 };
 exports.getUserWithId = getUserWithId;
 
