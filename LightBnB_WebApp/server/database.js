@@ -161,8 +161,6 @@ const getAllProperties = (options, limit = 10) => {
   LIMIT $${queryParams.length};
   `;
 
-  console.log("queryString", queryString, "queryParams", queryParams);
-
   return pool
     .query(queryString, queryParams)
     .then((result) => {
@@ -182,9 +180,32 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  let queryColumns = '';
+  Object.keys(property).forEach((col) => queryColumns += col + ', ');
+  console.log("queryColumns: ", queryColumns);
+
+  let queryParams = Object.values(property);
+  let values = '';
+  queryParams.forEach((elem, index) => values += `$${index + 1}, `);
+  console.log("values: " , values);
+
+  const queryString = `
+    INSERT INTO properties ( ${queryColumns.slice(0, queryColumns.length - 2)} )
+    VALUES ( ${values.slice(0, values.length - 2)} )
+    RETURNING *;
+  `;
+  console.log("queryString: ", queryString);
+
+  return pool
+    .query(queryString, queryParams)
+    .then((res) => {
+      console.log(res.rows);
+      return res.rows;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+
 };
 exports.addProperty = addProperty;
