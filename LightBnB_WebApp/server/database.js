@@ -1,5 +1,4 @@
 const properties = require('./json/properties.json');
-const users = require('./json/users.json');
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -39,11 +38,10 @@ const getUserWithId = function(id) {
   return pool
     .query(`SELECT * FROM users WHERE id = $1 `, [`${id}`])
     .then((id) => {
-      return id.rows[0];
+      return id.rows[0] || null;
     })
     .catch((err) => {
       console.log(err);
-      return null;
     });
 };
 exports.getUserWithId = getUserWithId;
@@ -55,10 +53,20 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  const values = [`${user.name}`, `${user.email}`, `${user.password}`];
+  return pool
+    .query(`
+    INSERT INTO users (name, email, password)
+    VALUES ( $1 , $2 , $3 )
+    RETURNING *;
+    `, values)
+    .then((res) => {
+      console.log(res.rows);
+      return res.rows;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 exports.addUser = addUser;
 
@@ -70,7 +78,25 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  const values = [`${guest_id}`, `${limit}`];
+  return pool
+    .query(`
+      SELECT reservations.*, properties.title, properties.cost_per_night, avg(rating) as average_rating
+      FROM reservations
+      JOIN properties ON reservations.property_id = properties.id
+      JOIN property_reviews ON properties.id = property_reviews.property_id
+      WHERE reservations.guest_id = $1
+      GROUP BY properties.id, reservations.id
+      ORDER BY reservations.start_date
+      LIMIT $2;
+    `, values)
+    .then((res) => {
+      return res.rows;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
 };
 exports.getAllReservations = getAllReservations;
 
@@ -92,7 +118,6 @@ const getAllProperties = (options, limit = 10) => {
       console.log(err.message);
     });
 };
-
 exports.getAllProperties = getAllProperties;
 
 
